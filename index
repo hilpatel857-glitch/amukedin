@@ -1,0 +1,1844 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amitia's Care Guide</title>
+
+    <!-- PWA Manifest & Favicon (The Flower 🌸) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#FF6B8B">
+    <link rel="apple-touch-icon" href="data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23FF6B8B'/%3E%3Ctext x='50' y='50' font-size='60' text-anchor='middle' dominant-baseline='central'%3E🌸%3C/text%3E%3C/svg%3E">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+         :root {
+            --cream: #FFF8EF;
+            --coral: #FF6B8B;
+            --coral-dark: #E14F70;
+            --lilac: #B79FE8;
+            --yellow: #FFD15C;
+            --plum: #3B2646;
+            --plum-soft: #6B5178;
+            --card: #FFFFFF;
+            --line: #F0E4D8;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            background: var(--cream);
+            background-image: radial-gradient(circle at 10% 10%, rgba(183, 159, 232, .15) 0%, transparent 40%), radial-gradient(circle at 90% 20%, rgba(255, 107, 139, .12) 0%, transparent 40%), radial-gradient(circle at 50% 90%, rgba(255, 209, 92, .15) 0%, transparent 45%);
+            font-family: 'Quicksand', sans-serif;
+            color: var(--plum);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 24px 14px 60px;
+            overflow-x: hidden;
+        }
+        
+        .app {
+            width: 100%;
+            max-width: 520px;
+            position: relative;
+            z-index: 10;
+        }
+        
+        h1,
+        h2,
+        h3 {
+            font-family: 'Fredoka', sans-serif;
+            margin: 0;
+        }
+        
+        .eyebrow {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 12px;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+            color: var(--coral-dark);
+            font-weight: 600;
+        }
+        /* Floating buttons */
+        
+        .music-toggle,
+        .panic-btn {
+            position: fixed;
+            top: 18px;
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            background: #fff;
+            border: 2px solid var(--line);
+            box-shadow: 0 6px 16px rgba(59, 38, 70, .12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 19px;
+            cursor: pointer;
+            z-index: 999;
+            transition: all .2s ease;
+        }
+        
+        .music-toggle {
+            right: 18px;
+        }
+        
+        .panic-btn {
+            left: 18px;
+            /* Perfectly positioned top left */
+            background: var(--cream);
+            border-color: var(--coral);
+            position: relative;
+        }
+        /* Elegant soft pulsing ring for panic button */
+        
+        .panic-btn::before {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            right: -4px;
+            bottom: -4px;
+            border-radius: 50%;
+            border: 2px solid var(--coral);
+            opacity: 0.5;
+            animation: softPulse 2.5s infinite;
+            pointer-events: none;
+        }
+        
+        @keyframes softPulse {
+            0% {
+                transform: scale(1);
+                opacity: 0.6;
+            }
+            50% {
+                transform: scale(1.3);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 0;
+            }
+        }
+        
+        .music-toggle:hover,
+        .panic-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .music-toggle.muted {
+            opacity: .55;
+        }
+        /* Flower progress tracker */
+        
+        .flower-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 6px 0 22px;
+            opacity: 0;
+            transition: opacity .4s ease;
+        }
+        
+        .flower-wrap.show {
+            opacity: 1;
+        }
+        
+        .petal {
+            width: 30px;
+            height: 30px;
+            border-radius: 60% 40% 60% 40%/40% 60% 40% 60%;
+            background: var(--line);
+            transition: all .5s cubic-bezier(.34, 1.56, .64, 1);
+            transform: scale(.75);
+        }
+        
+        .petal.bloomed {
+            background: linear-gradient(135deg, var(--coral), var(--lilac));
+            transform: scale(1) rotate(15deg);
+            box-shadow: 0 3px 10px rgba(255, 107, 139, .35);
+        }
+        
+        .petal.active {
+            background: linear-gradient(135deg, var(--yellow), var(--coral));
+            transform: scale(1.15) rotate(-10deg);
+        }
+        /* Screens */
+        
+        .screen {
+            display: none;
+            animation: fadeUp .45s ease both;
+        }
+        
+        .screen.active {
+            display: block;
+        }
+        
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(14px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes shake {
+            0%,
+            100% {
+                transform: translateX(0) rotate(0);
+            }
+            20% {
+                transform: translateX(-6px) rotate(-1deg);
+            }
+            40% {
+                transform: translateX(6px) rotate(1deg);
+            }
+            60% {
+                transform: translateX(-4px) rotate(-0.5deg);
+            }
+            80% {
+                transform: translateX(4px) rotate(0.5deg);
+            }
+        }
+        
+        .shake {
+            animation: shake .5s ease;
+        }
+        
+        .card {
+            background: var(--card);
+            border-radius: 26px;
+            padding: 30px 26px;
+            box-shadow: 0 10px 30px rgba(59, 38, 70, .08);
+            border: 1px solid var(--line);
+            position: relative;
+        }
+        
+        .card.tilt {
+            transform: rotate(-1.1deg);
+        }
+        
+        .card.tilt2 {
+            transform: rotate(1.1deg);
+        }
+        
+        .tag {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            background: var(--yellow);
+            color: var(--plum);
+            padding: 5px 12px;
+            border-radius: 100px;
+            margin-bottom: 10px;
+            font-family: 'Fredoka', sans-serif;
+        }
+        
+        .progress-line {
+            font-size: 12px;
+            color: var(--plum-soft);
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        
+        .q-title {
+            font-size: 22px;
+            line-height: 1.35;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        
+        .q-sub {
+            font-size: 14px;
+            color: var(--plum-soft);
+            margin-bottom: 20px;
+        }
+        /* Option buttons */
+        
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 6px;
+        }
+        
+        .opt {
+            background: var(--cream);
+            border: 2px solid var(--line);
+            border-radius: 16px;
+            padding: 14px 16px;
+            font-family: 'Quicksand', sans-serif;
+            font-size: 15.5px;
+            font-weight: 600;
+            color: var(--plum);
+            cursor: pointer;
+            text-align: left;
+            transition: all .18s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .opt:hover {
+            border-color: var(--lilac);
+            transform: translateY(-2px);
+        }
+        
+        .opt.selected {
+            background: linear-gradient(135deg, rgba(255, 107, 139, .15), rgba(183, 159, 232, .15));
+            border-color: var(--coral);
+            box-shadow: 0 4px 14px rgba(255, 107, 139, .2);
+        }
+        
+        .opt .em {
+            font-size: 19px;
+        }
+        /* Multi select chips */
+        
+        .chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 9px;
+            margin-bottom: 6px;
+        }
+        
+        .chip {
+            background: var(--cream);
+            border: 2px solid var(--line);
+            border-radius: 100px;
+            padding: 9px 16px;
+            font-size: 14.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .18s ease;
+        }
+        
+        .chip.selected {
+            background: var(--coral);
+            color: #fff;
+            border-color: var(--coral);
+        }
+        /* Slider */
+        
+        .slider-wrap {
+            margin: 26px 0 10px;
+        }
+        
+        input[type=range] {
+            width: 100%;
+            -webkit-appearance: none;
+            height: 10px;
+            border-radius: 100px;
+            background: linear-gradient(90deg, var(--yellow), var(--coral));
+            outline: none;
+        }
+        
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #fff;
+            border: 4px solid var(--coral-dark);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .2);
+        }
+        
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12.5px;
+            color: var(--plum-soft);
+            margin-top: 6px;
+            font-weight: 600;
+        }
+        
+        .slider-value {
+            text-align: center;
+            font-family: 'Fredoka', sans-serif;
+            font-size: 17px;
+            margin-top: 14px;
+            color: var(--coral-dark);
+            min-height: 24px;
+        }
+        
+        textarea,
+        input[type=text] {
+            width: 100%;
+            border: 2px solid var(--line);
+            border-radius: 16px;
+            padding: 14px;
+            font-family: 'Quicksand', sans-serif;
+            font-size: 15px;
+            color: var(--plum);
+            background: var(--cream);
+            resize: none;
+            outline: none;
+        }
+        
+        textarea:focus,
+        input[type=text]:focus {
+            border-color: var(--coral);
+        }
+        
+        .skip {
+            text-align: center;
+            font-size: 13px;
+            color: var(--plum-soft);
+            margin-top: 18px;
+            cursor: pointer;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+        
+        .nav-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 22px;
+        }
+        
+        .btn {
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            font-size: 15.5px;
+            border: none;
+            border-radius: 100px;
+            padding: 13px 26px;
+            cursor: pointer;
+            transition: all .2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--coral), var(--coral-dark));
+            color: #fff;
+            box-shadow: 0 6px 16px rgba(255, 107, 139, .35);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 107, 139, .45);
+        }
+        
+        .btn-primary:disabled {
+            opacity: .4;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-whatsapp {
+            background: #25D366;
+            color: #fff;
+            box-shadow: 0 6px 16px rgba(37, 211, 102, .35);
+        }
+        
+        .btn-whatsapp:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(37, 211, 102, .45);
+        }
+        
+        .btn-ghost {
+            background: transparent;
+            color: var(--plum-soft);
+            font-size: 14px;
+            padding: 10px 14px;
+        }
+        /* Reaction tag */
+        
+        .reaction-tag {
+            display: inline-block;
+            margin-top: 16px;
+            font-size: 12.5px;
+            font-weight: 700;
+            color: var(--coral-dark);
+            background: rgba(255, 107, 139, .12);
+            padding: 7px 14px;
+            border-radius: 100px;
+            animation: popIn .32s cubic-bezier(.34, 1.56, .64, 1);
+        }
+        
+        @keyframes popIn {
+            from {
+                opacity: 0;
+                transform: scale(.75) translateY(6px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+        /* Floating Emoji Animation */
+        
+        .floating-emoji {
+            position: fixed;
+            font-size: 28px;
+            pointer-events: none;
+            z-index: 1000;
+            animation: floatUp 1s ease-out forwards;
+        }
+        
+        @keyframes floatUp {
+            0% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(0.5);
+            }
+            50% {
+                transform: translate(-50%, -100px) scale(1.2);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -150px) scale(1);
+            }
+        }
+        /* Intro */
+        
+        .intro {
+            text-align: center;
+            padding-top: 30px;
+        }
+        
+        .intro .badge {
+            display: inline-block;
+            font-size: 46px;
+            margin-bottom: 14px;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%,
+            100% {
+                transform: translateY(0)
+            }
+            50% {
+                transform: translateY(-8px)
+            }
+        }
+        
+        .intro h1 {
+            font-size: 29px;
+            line-height: 1.25;
+            margin-bottom: 12px;
+        }
+        
+        .intro p {
+            font-size: 15.5px;
+            color: var(--plum-soft);
+            line-height: 1.6;
+            margin-bottom: 26px;
+        }
+        
+        .consent {
+            background: rgba(183, 159, 232, .12);
+            border-radius: 16px;
+            padding: 14px 16px;
+            font-size: 13px;
+            color: var(--plum-soft);
+            margin-bottom: 24px;
+            text-align: left;
+        }
+        
+        .time-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--cream);
+            border: 1px solid var(--line);
+            padding: 7px 14px;
+            border-radius: 100px;
+            font-size: 12.5px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--plum-soft);
+        }
+        /* Transition Screen */
+        
+        .transition-screen {
+            text-align: center;
+            padding: 50px 20px;
+        }
+        
+        .transition-screen .emoji {
+            font-size: 52px;
+            margin-bottom: 16px;
+        }
+        
+        .transition-screen h2 {
+            font-size: 21px;
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+        
+        .transition-screen p {
+            color: var(--plum-soft);
+            font-size: 14.5px;
+        }
+        /* Reveal */
+        
+        .reveal-card {
+            background: linear-gradient(160deg, var(--coral) 0%, var(--lilac) 100%);
+            border-radius: 28px;
+            padding: 36px 26px;
+            text-align: center;
+            color: #fff;
+            box-shadow: 0 14px 34px rgba(183, 159, 232, .4);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .reveal-card .emoji {
+            font-size: 60px;
+            margin-bottom: 10px;
+        }
+        
+        .reveal-card h3 {
+            font-size: 13px;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            opacity: .85;
+            font-weight: 600;
+        }
+        
+        .reveal-card h2 {
+            font-size: 27px;
+            margin: 8px 0 12px;
+        }
+        
+        .reveal-card p {
+            font-size: 14.5px;
+            line-height: 1.6;
+            opacity: .95;
+        }
+        
+        .confetti-piece {
+            position: absolute;
+            top: -10px;
+            font-size: 18px;
+            pointer-events: none;
+            animation: confettiFall 1.8s ease-in forwards;
+        }
+        
+        @keyframes confettiFall {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(320px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        .flip-card {
+            perspective: 1000px;
+            height: 340px;
+            margin-top: 18px;
+        }
+        
+        .flip-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform .6s cubic-bezier(.4, .2, .2, 1);
+            transform-style: preserve-3d;
+            cursor: pointer;
+        }
+        
+        .flip-card.flipped .flip-inner {
+            transform: rotateY(180deg);
+        }
+        
+        .flip-front,
+        .flip-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 24px;
+            padding: 26px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        
+        .flip-front {
+            background: var(--plum);
+            color: #fff;
+        }
+        
+        .flip-front .emoji {
+            font-size: 44px;
+            margin-bottom: 12px;
+        }
+        
+        .flip-back {
+            background: #fff;
+            border: 2px solid var(--coral);
+            transform: rotateY(180deg);
+            text-align: left;
+            justify-content: flex-start;
+            overflow-y: auto;
+        }
+        
+        .flip-back h4 {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: var(--coral-dark);
+            margin-bottom: 8px;
+        }
+        
+        .flip-back ul {
+            margin: 0 0 14px;
+            padding-left: 18px;
+            font-size: 13.5px;
+            line-height: 1.6;
+        }
+        
+        .flip-hint {
+            font-size: 12px;
+            color: var(--plum-soft);
+            text-align: center;
+            margin-top: 10px;
+        }
+        /* Final Screen */
+        
+        .final-screen {
+            text-align: center;
+            padding-top: 10px;
+        }
+        
+        .final-screen .emoji {
+            font-size: 50px;
+            margin-bottom: 12px;
+        }
+        
+        .steps {
+            text-align: left;
+            background: var(--cream);
+            border-radius: 18px;
+            padding: 18px 20px;
+            margin: 20px 0;
+            border: 1px solid var(--line);
+        }
+        
+        .step {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 14px;
+            align-items: flex-start;
+        }
+        
+        .step:last-child {
+            margin-bottom: 0;
+        }
+        
+        .step-num {
+            background: var(--coral);
+            color: #fff;
+            font-family: 'Fredoka', sans-serif;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12.5px;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+        
+        .step-text {
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .password-box {
+            background: var(--plum);
+            color: #fff;
+            border-radius: 14px;
+            padding: 12px 16px;
+            font-family: 'Fredoka', sans-serif;
+            font-size: 18px;
+            letter-spacing: .08em;
+            margin: 4px 0 2px;
+            display: inline-block;
+        }
+        /* Bonus round: coupon book */
+        
+        .bonus-intro {
+            text-align: center;
+            padding-top: 8px;
+        }
+        
+        .bonus-intro .emoji {
+            font-size: 48px;
+            margin-bottom: 10px;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .coupon-deck {
+            margin-top: 10px;
+        }
+        
+        .coupon {
+            position: relative;
+            background: #fff;
+            border: 2.5px dashed var(--coral);
+            border-radius: 18px;
+            padding: 18px 20px;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transition: all .2s ease;
+        }
+        
+        .coupon::before,
+        .coupon::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: var(--cream);
+            border-radius: 50%;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .coupon::before {
+            left: -11px;
+        }
+        
+        .coupon::after {
+            right: -11px;
+        }
+        
+        .coupon .c-emoji {
+            font-size: 30px;
+            flex-shrink: 0;
+        }
+        
+        .coupon .c-text {
+            flex: 1;
+        }
+        
+        .coupon .c-title {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+        
+        .coupon .c-sub {
+            font-size: 12.5px;
+            color: var(--plum-soft);
+        }
+        /* New Redeem Button Style */
+        
+        .btn-redeem {
+            background: var(--coral);
+            color: #fff;
+            border: none;
+            border-radius: 100px;
+            padding: 8px 16px;
+            font-size: 12.5px;
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 10px rgba(255, 107, 139, 0.25);
+        }
+        
+        .btn-redeem:active {
+            transform: scale(0.92);
+        }
+        
+         ::selection {
+            background: var(--coral);
+            color: #fff;
+        }
+        /* THE PANIC ROOM (Validation Generator) */
+        
+        .panic-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(59, 38, 70, 0.85);
+            backdrop-filter: blur(5px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            padding: 20px;
+        }
+        
+        .panic-modal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .panic-card {
+            background: var(--cream);
+            width: 100%;
+            max-width: 400px;
+            border-radius: 26px;
+            padding: 30px 24px;
+            text-align: center;
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            border: 3px solid var(--coral);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .panic-modal.active .panic-card {
+            transform: scale(1) translateY(0);
+        }
+        
+        .panic-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #eee;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .validation-text {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--plum);
+            min-height: 80px;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+
+<body>
+    <audio id="bgMusic" src="song.mp3" loop preload="auto"></audio>
+    <div class="music-toggle" id="musicToggle" onclick="toggleMusic()" title="Play/pause music">🎵</div>
+
+    <!-- Emergency Feral Button -->
+    <div class="panic-btn" onclick="openPanicRoom()" title="Emergency Validation">🚨</div>
+
+    <!-- Panic Room Modal -->
+    <div class="panic-modal" id="panicModal">
+        <div class="panic-card">
+            <button class="panic-close" onclick="closePanicRoom()">❌</button>
+            <div style="font-size: 40px; margin-bottom:10px;">👑</div>
+            <h2 style="color: var(--coral-dark);">The Validation Station</h2>
+            <p style="font-size: 13px; color: var(--plum-soft); margin-top: 5px;">For when cramps make you want to commit arson.</p>
+
+            <div class="validation-text" id="validationText">
+                "Click the button. I'm ready to agree with literally anything you say."
+            </div>
+
+            <button class="btn btn-primary" style="width: 100%; font-size: 18px; padding: 16px;" onclick="generateValidation()">
+                Tell me I'm right 💖
+            </button>
+        </div>
+    </div>
+
+    <div class="app">
+
+        <div class="flower-wrap" id="flowerWrap">
+            <div class="petal" data-p="0"></div>
+            <div class="petal" data-p="1"></div>
+            <div class="petal" data-p="2"></div>
+        </div>
+
+        <!-- INTRO -->
+        <div class="screen active" id="screen-intro">
+            <div class="card intro">
+                <div class="badge">🌸</div>
+                <div class="eyebrow">a little unhinged, a little sweet</div>
+                <h1>Amitia's Care Guide</h1>
+                <p>Chaki, real talk — every other guy shows up with a chocolate bar and calls it "support." I refuse to be that basic. No googling "how to help girlfriend period" at 2am, no vibes-based guessing, no participation trophy energy. 10 questions,
+                    straight from you, and then I actually know things, Bachhu.
+                </p>
+                <div class="time-pill">⏱️ 10 questions · under 2 minutes · zero cringe, I promise</div>
+                <div class="consent">Answer only what feels comfortable — skip literally anything, no explanation needed. Not a test, no wrong answers, nobody's grading your cramps on a curve.</div>
+                <button class="btn btn-primary" style="width:100%" onclick="goTo('ch1-1')">bet, let's go kuchpuchu →</button>
+            </div>
+        </div>
+
+        <div id="questions-mount"></div>
+
+        <!-- REVEAL -->
+        <div class="screen" id="screen-reveal">
+            <div class="reveal-card" id="revealCard">
+                <div class="emoji" id="revealEmoji">🐉</div>
+                <h3>Your Period Personality</h3>
+                <h2 id="revealTitle">The Cozy Dragon</h2>
+                <p id="revealDesc">Soft on the outside, will absolutely roast you if you say the wrong thing. Handle with snacks and zero sudden questions.</p>
+            </div>
+            <div style="text-align:center; margin-top:20px;">
+                <button class="btn btn-primary" onclick="goTo('cheatsheet')">okay show me the cheat sheet →</button>
+            </div>
+        </div>
+
+        <!-- CHEAT SHEET FLIP CARD -->
+        <div class="screen" id="screen-cheatsheet">
+            <div class="eyebrow" style="text-align:center; display:block; margin-bottom:10px;">almost there, kuchpuchu</div>
+            <h2 style="text-align:center; font-size:21px; margin-bottom:16px;">tap the card, Bachhu 👇</h2>
+            <div class="flip-card" id="flipCard" onclick="this.classList.toggle('flipped')">
+                <div class="flip-inner">
+                    <div class="flip-front">
+                        <div class="emoji">🚨</div>
+                        <div style="font-family:'Fredoka',sans-serif; font-size:19px;">In Case Of Emergency</div>
+                        <div style="font-size:13px; opacity:.75; margin-top:8px;">tap to flip, dramatic music optional</div>
+                    </div>
+                    <div class="flip-back" id="flipBackContent"></div>
+                </div>
+            </div>
+            <div class="flip-hint">this is basically your Chaki survival manual now, memorize it or else</div>
+            <div style="text-align:center; margin-top:22px;">
+                <button class="btn btn-primary" onclick="goTo('bonus')">wait there's more →</button>
+            </div>
+        </div>
+
+        <!-- BONUS ROUND: COUPON BOOK -->
+        <div class="screen" id="screen-bonus">
+            <div class="card bonus-intro">
+                <div class="emoji">🎟️</div>
+                <div class="tag" style="background:var(--lilac); color:#fff;">plot twist</div>
+                <h2 style="font-size:21px; margin:6px 0 8px;">you weren't done, actually</h2>
+                <p style="color:var(--plum-soft); font-size:14px; margin-bottom:4px;">since you survived 10 whole questions without leaving me on read, here's a coupon book. real ones. redeemable whenever, no expiry, I cannot legally back out.</p>
+            </div>
+            <div class="coupon-deck">
+                <div class="coupon">
+                    <div class="c-emoji">🛏️</div>
+                    <div class="c-text">
+                        <div class="c-title">Rage Nap Alibi</div>
+                        <div class="c-sub">1x "she's asleep, do not disturb" cover story, no questions asked</div>
+                    </div>
+                    <button class="btn-redeem" onclick="redeemCoupon('Rage Nap Alibi 🛏️')">Redeem</button>
+                </div>
+                <div class="coupon">
+                    <div class="c-emoji">🍫</div>
+                    <div class="c-text">
+                        <div class="c-title">No-Questions Snack Run</div>
+                        <div class="c-sub">1x emergency snack delivery, silent and unbothered</div>
+                    </div>
+                    <button class="btn-redeem" onclick="redeemCoupon('No-Questions Snack Run 🍫')">Redeem</button>
+                </div>
+                <div class="coupon">
+                    <div class="c-emoji">🙇</div>
+                    <div class="c-text">
+                        <div class="c-title">I Was Wrong And I Know It</div>
+                        <div class="c-sub">1x instant apology, zero debate, full surrender</div>
+                    </div>
+                    <button class="btn-redeem" onclick="redeemCoupon('I Was Wrong And I Know It 🙇')">Redeem</button>
+                </div>
+                <div class="coupon">
+                    <div class="c-emoji">🫂</div>
+                    <div class="c-text">
+                        <div class="c-title">Emergency Cuddle Puddle</div>
+                        <div class="c-sub">1x on-demand hug, redeemable mid-argument if needed</div>
+                    </div>
+                    <button class="btn-redeem" onclick="redeemCoupon('Emergency Cuddle Puddle 🫂')">Redeem</button>
+                </div>
+                <div class="coupon">
+                    <div class="c-emoji">🎬</div>
+                    <div class="c-text">
+                        <div class="c-title">Veto My Terrible Movie Pick</div>
+                        <div class="c-sub">1x full override of my questionable taste in movies</div>
+                    </div>
+                    <button class="btn-redeem" onclick="redeemCoupon('Veto My Terrible Movie Pick 🎬')">Redeem</button>
+                </div>
+            </div>
+            <div style="text-align:center; margin-top:18px;">
+                <button class="btn btn-primary" style="width:100%" onclick="goTo('final')">lock it all in →</button>
+            </div>
+        </div>
+
+        <!-- FINAL -->
+        <div class="screen" id="screen-final">
+            <div class="card final-screen">
+                <div class="emoji">🎁</div>
+                <h2 style="font-size:22px; margin-bottom:8px;">your care guide is ready, no cap</h2>
+                <p style="color:var(--plum-soft); font-size:14.5px;">turned 10 honest answers + 5 coupons into something I'll actually use, Amitia.</p>
+
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-num">1</div>
+                        <div class="step-text">Download the PDF below.</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-num">2</div>
+                        <div class="step-text">It's password protected with:<br><span class="password-box">432009</span></div>
+                    </div>
+                    <div class="step">
+                        <div class="step-num">3</div>
+                        <div class="step-text">Keep this app on your home screen for emergency coupon redemptions.</div>
+                    </div>
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap:10px; margin-top: 14px;">
+                    <button class="btn btn-primary" style="width:100%;" onclick="generatePDF()">⬇️ Download Care Guide PDF</button>
+                    <!-- WhatsApp SOS Button -->
+                    <button class="btn btn-whatsapp" style="width:100%;" onclick="summonBoy()">🚨 Quick SOS: Text Me Now</button>
+                </div>
+
+                <div id="pdfStatus" style="font-size:13px; color:var(--plum-soft); margin-top:14px;"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        /* ---------------- WHATSAPP SOS & COUPON REDEMPTION ---------------- */
+        const sosMessages = [
+            "🚨 CODE RED: The cramps are winning. Bring snacks and a good apology for breathing.",
+            "🚨 SOS: Dragon mode activated. Approach carefully with chocolate.",
+            "🚨 EMERGENCY: I require cuddles, absolute silence, and my favorite food immediately.",
+            "🚨 ALERT: My uterus is choosing violence today. Backup requested."
+        ];
+
+        // Indian country code (+91) combined with your number
+        const myWhatsAppNumber = "919773085739";
+
+        function summonBoy() {
+            const msg = sosMessages[Math.floor(Math.random() * sosMessages.length)];
+            window.open(`https://wa.me/${myWhatsAppNumber}?text=${encodeURIComponent(msg)}`, '_blank');
+        }
+
+        function redeemCoupon(couponName) {
+            const msg = `🚨 COUPON REDEEMED: [ ${couponName} ]\n\nAmitia has just cashed this in. Proceed immediately. No questions asked.`;
+            window.open(`https://wa.me/${myWhatsAppNumber}?text=${encodeURIComponent(msg)}`, '_blank');
+        }
+
+        /* ---------------- VALIDATION STATION (PANIC ROOM) ---------------- */
+        const validations = [
+            "Your uterus is acting like it pays rent. It doesn't. You have every right to be furious.",
+            "You are mathematically the prettiest girl in the world, even when you're bloated and plotting my demise.",
+            "Whatever you're mad about right now, you are 100% right. I don't even need context.",
+            "I would physically fight your cramps in a parking lot. I might lose, but I'd try.",
+            "Yes, you DO deserve a little treat. In fact, legally, I owe you several.",
+            "If you committed a minor crime today, I would hide the evidence. Just saying.",
+            "You are completely justified in being mad at that thing I did in a dream last night.",
+            "I'm just a boy standing in front of a girl, begging her not to unleash the dragon.",
+            "I am aggressively sighing at whoever annoyed you today.",
+            "You're not being dramatic, everyone else is simply not on your level.",
+            "I promise to only speak in a soothing whisper until the pain meds kick in."
+        ];
+
+        function openPanicRoom() {
+            document.getElementById('panicModal').classList.add('active');
+            document.getElementById('validationText').innerText = "Click the button. I'm ready to agree with literally anything you say.";
+        }
+
+        function closePanicRoom() {
+            document.getElementById('panicModal').classList.remove('active');
+        }
+
+        function generateValidation() {
+            const textElement = document.getElementById('validationText');
+            textElement.style.animation = 'none';
+            textElement.offsetHeight; /* trigger reflow */
+            textElement.style.animation = 'shake 0.3s ease';
+            const randomMsg = validations[Math.floor(Math.random() * validations.length)];
+            textElement.innerText = `"${randomMsg}"`;
+        }
+
+        /* ---------------- BACKGROUND MUSIC ---------------- */
+        const bgMusic = document.getElementById('bgMusic');
+        const musicToggle = document.getElementById('musicToggle');
+        bgMusic.volume = 0.55;
+
+        function setMusicIcon() {
+            musicToggle.textContent = bgMusic.paused ? '🔇' : '🎵';
+            musicToggle.classList.toggle('muted', bgMusic.paused);
+        }
+
+        function tryAutoplay() {
+            const playPromise = bgMusic.play();
+            if (playPromise !== undefined) {
+                playPromise.then(setMusicIcon).catch(() => {
+                    setMusicIcon();
+                    const startOnInteract = () => {
+                        bgMusic.play().then(setMusicIcon).catch(() => {});
+                        document.removeEventListener('click', startOnInteract);
+                        document.removeEventListener('touchstart', startOnInteract);
+                        document.removeEventListener('keydown', startOnInteract);
+                    };
+                    document.addEventListener('click', startOnInteract, {
+                        once: true
+                    });
+                    document.addEventListener('touchstart', startOnInteract, {
+                        once: true
+                    });
+                    document.addEventListener('keydown', startOnInteract, {
+                        once: true
+                    });
+                });
+            }
+        }
+
+        function toggleMusic() {
+            if (bgMusic.paused) {
+                bgMusic.play().then(setMusicIcon).catch(() => {});
+            } else {
+                bgMusic.pause();
+                setMusicIcon();
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', tryAutoplay);
+
+        /* ---------------- FLOATING EMOJI FX ---------------- */
+        function spawnFloatingEmoji(emoji, x, y) {
+            const el = document.createElement('div');
+            el.className = 'floating-emoji';
+            el.textContent = emoji;
+            el.style.left = x + 'px';
+            el.style.top = y + 'px';
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 1000);
+        }
+
+        /* ---------------- DATA MODEL ---------------- */
+        const answers = {};
+
+        const chapters = [{
+            id: 1,
+            emoji: '🎭',
+            title: 'The Vibe Check',
+            transitionIn: {
+                emoji: '🎭',
+                title: "Chapter 1: The Vibe Check",
+                sub: "Warm-up round, kuchpuchu. Low stakes, unreasonably high entertainment."
+            },
+            questions: [{
+                id: 'personality_intro',
+                type: 'single',
+                title: "When the mood drops, you become...",
+                sub: "Pick your final form, Chaki. Choose wisely, this is basically canon now.",
+                options: [{
+                    em: '🐉',
+                    label: 'A dragon guarding her cave'
+                }, {
+                    em: '🌧️',
+                    label: 'A quiet rainy day'
+                }, {
+                    em: '🔥',
+                    label: 'Chaotic and a little unhinged'
+                }, {
+                    em: '😴',
+                    label: 'A very sleepy raccoon'
+                }]
+            }, {
+                id: 'villain',
+                type: 'single',
+                title: "If your cramps were casting a movie villain, who gets the role?",
+                sub: "Method-act it, Bachhu. The Academy is watching.",
+                options: [{
+                    em: '😈',
+                    label: 'Thanos — inevitable, dramatic'
+                }, {
+                    em: '🃏',
+                    label: 'The Joker — just here for chaos'
+                }, {
+                    em: '🧊',
+                    label: 'Elsa — cold, isolating, icy'
+                }, {
+                    em: '👹',
+                    label: 'A final boss with no cutscene warning'
+                }]
+            }]
+        }, {
+            id: 2,
+            emoji: '🎒',
+            title: 'Survival Kit 101',
+            transitionIn: {
+                emoji: '🎒',
+                title: "Chapter 2: Survival Kit 101",
+                sub: "The practical stuff, so I stop showing up with the wrong everything, every time."
+            },
+            questions: [{
+                id: 'period_kit',
+                type: 'text',
+                title: "What's in your period go-bag?",
+                sub: "Brand, size, secret weapon — spill as much or as little as you want",
+                placeholder: "e.g. Whisper Ultra, size L, emergency cup, snacks nobody can touch...",
+                multiline: true
+            }, {
+                id: 'cramp_relief',
+                type: 'multi',
+                title: "What actually makes the cramps back off?",
+                sub: "Select every legal method, no follow-up interrogation",
+                options: [{
+                    em: '🔥',
+                    label: 'Heating pad'
+                }, {
+                    em: '♨️',
+                    label: 'Hot water bottle'
+                }, {
+                    em: '💊',
+                    label: 'Medicine'
+                }, {
+                    em: '🧘',
+                    label: 'Stretching / yoga'
+                }, {
+                    em: '😴',
+                    label: 'Just sleeping it off'
+                }, {
+                    em: '🤗',
+                    label: 'Someone rubbing my back'
+                }]
+            }, {
+                id: 'pain_level',
+                type: 'slider',
+                title: "Rate the chaos: mild inconvenience to final boss",
+                sub: "Slide honestly, no bravery points here, this isn't a flex",
+                min: 0,
+                max: 100,
+                step: 1,
+                default: 50,
+                labels: ['barely a blip', 'send a search party'],
+                valueFn: (v) => v < 20 ? 'basically a Tuesday 😌' : v < 45 ? 'annoying but I\'ll survive, no big deal' : v < 75 ? 'genuinely rough, bring snacks and shut up' : 'final boss music is playing, send backup 🔥'
+            }]
+        }, {
+            id: 3,
+            emoji: '💌',
+            title: 'What I Actually Need From You',
+            transitionIn: {
+                emoji: '💌',
+                title: "Chapter 3: What I Actually Need From You",
+                sub: "Last stretch, Bachhu. This is the one that actually matters, pay attention."
+            },
+            questions: [{
+                id: 'want_most',
+                type: 'multi',
+                title: "When it hits, you secretly want...",
+                sub: "Pick all that apply, no judgment, no cross-examination",
+                options: [{
+                    em: '🫂',
+                    label: 'Company'
+                }, {
+                    em: '🌙',
+                    label: 'Space'
+                }, {
+                    em: '🤗',
+                    label: 'Hugs'
+                }, {
+                    em: '👂',
+                    label: 'Someone to listen'
+                }, {
+                    em: '😂',
+                    label: 'Funny memes'
+                }, {
+                    em: '🍜',
+                    label: 'Food, just bring food'
+                }, {
+                    em: '😴',
+                    label: 'To be left alone to sleep'
+                }]
+            }, {
+                id: 'translator',
+                type: 'text',
+                title: 'The official "I\'m fine" translator',
+                sub: 'When you say "I\'m fine," what do you actually mean? Decode it for me.',
+                placeholder: "e.g. I'm fine means don't ask twice, just bring snacks and vibes...",
+                multiline: true
+            }, {
+                id: 'check_in',
+                type: 'single',
+                title: "Should I keep checking in, or vanish respectfully?",
+                sub: "",
+                options: [{
+                    em: '💬',
+                    label: 'Check in, just not every 5 mins'
+                }, {
+                    em: '🤫',
+                    label: 'One check-in then leave me be'
+                }, {
+                    em: '🚪',
+                    label: 'Let me come to you'
+                }, {
+                    em: '📍',
+                    label: 'Depends on the day, I\'ll signal'
+                }]
+            }, {
+                id: 'first_move',
+                type: 'single',
+                title: "My first move when I find out — go.",
+                sub: "",
+                options: [{
+                    em: '💬',
+                    label: 'Just ask how you\'re feeling'
+                }, {
+                    em: '🍫',
+                    label: 'Show up with snacks, no announcement'
+                }, {
+                    em: '🤗',
+                    label: 'Offer a hug, let you lead'
+                }, {
+                    em: '🙊',
+                    label: 'Say nothing, just be extra soft'
+                }]
+            }, {
+                id: 'never_say',
+                type: 'text',
+                title: "One thing I should NEVER say. Ever. I mean it.",
+                sub: "Protect me from myself, Chaki. Save future me from a grave mistake.",
+                placeholder: "e.g. don't ever say 'it's not that bad'...",
+                multiline: true
+            }]
+        }];
+
+        const flow = [];
+        chapters.forEach((ch, ci) => {
+            flow.push({
+                type: 'transition',
+                chapterIndex: ci,
+                data: ch.transitionIn
+            });
+            ch.questions.forEach((q, qi) => {
+                flow.push({
+                    type: 'question',
+                    chapterIndex: ci,
+                    data: q,
+                    isLastInChapter: qi === ch.questions.length - 1
+                });
+            });
+        });
+
+        const TOTAL_QUESTIONS = flow.filter(f => f.type === 'question').length;
+        let flowIndex = 0;
+        let lastReaction = null;
+
+        const reactionPool = [
+            'noted. filing under "important" 📁',
+            'valid, no notes',
+            'she said what she said 💅',
+            'logging this for future snack runs 🍫',
+            'screenshotting this internally 📸',
+            'duly recorded, kuchpuchu',
+            'the council has heard you',
+            'okay this is actually useful, respect',
+            'writing this in permanent marker, no erasing',
+            'the audacity to be this real, I love it',
+            'it\'s giving important intel 🕵️',
+            'bro I need this laminated'
+        ];
+
+        function pickReaction() {
+            return reactionPool[Math.floor(Math.random() * reactionPool.length)];
+        }
+
+        function questionNumber() {
+            let count = 0;
+            for (let i = 0; i <= flowIndex; i++) {
+                if (flow[i].type === 'question') count++;
+            }
+            return count;
+        }
+
+        function progressSuffix(n) {
+            if (n <= 2) return 'warm-up, easy money';
+            if (n <= 5) return 'we\'re in it now, no turning back';
+            if (n <= 8) return 'you\'re basically writing my final exam';
+            return 'final stretch, don\'t quit on me now';
+        }
+
+        /* ---------------- RENDER ---------------- */
+        const mount = document.getElementById('questions-mount');
+
+        function renderFlow() {
+            const item = flow[flowIndex];
+            mount.innerHTML = '';
+            const screen = document.createElement('div');
+            screen.className = 'screen active';
+
+            if (item.type === 'transition') {
+                screen.innerHTML = `
+      <div class="card transition-screen">
+        <div class="emoji">${item.data.emoji}</div>
+        <h2>${item.data.title}</h2>
+        <p>${item.data.sub}</p>
+        <button class="btn btn-primary" style="margin-top:22px;" onclick="advance()">continue →</button>
+      </div>`;
+                updateFlower(item.chapterIndex, true);
+            } else {
+                const q = item.data;
+                const tiltClass = item.chapterIndex % 2 === 0 ? 'tilt' : 'tilt2';
+                const qNum = questionNumber();
+                let inner = `<div class="tag">Chapter ${item.chapterIndex+1} · ${chapters[item.chapterIndex].title}</div>
+      <div class="progress-line">Question ${qNum} of ${TOTAL_QUESTIONS} — ${progressSuffix(qNum)}</div>
+      <div class="q-title">${q.title}</div>
+      ${q.sub ? `<div class="q-sub">${q.sub}</div>` : '<div style="height:14px"></div>'}`;
+
+                if(q.type === 'single'){
+                  inner += `<div class="options">`;
+                  q.options.forEach((o,i)=>{
+                    const sel = answers[q.id]===o.label ? 'selected':'';
+                    // Pass event to trigger floating emoji
+                    inner += `<div class="opt ${sel}" onclick="selectSingle(event, '${q.id}', ${i}, '${o.em}')"><span class="em">${o.em}</span>${o.label}</div>`;
+                  });
+                  inner += `</div>`;
+                  if(lastReaction && answers[q.id] !== undefined) inner += `<div class="reaction-tag">${lastReaction}</div>`;
+                } else if(q.type === 'multi'){
+                  inner += `<div class="chips">`;
+                  q.options.forEach((o,i)=>{
+                    const cur = answers[q.id] || [];
+                    const sel = cur.includes(o.label) ? 'selected':'';
+                    // Pass event to trigger floating emoji
+                    inner += `<div class="chip ${sel}" onclick="selectMulti(event, '${q.id}', '${o.label.replace(/'/g,"\\'")}', '${o.em}')">${o.em} ${o.label}</div>`;
+                  });
+                  inner += `</div>`;
+                  if(lastReaction && answers[q.id] && answers[q.id].length) inner += `<div class="reaction-tag">${lastReaction}</div>`;
+                } else if(q.type === 'slider'){
+                  const val = answers[q.id] !== undefined ? answers[q.id] : q.default;
+                  inner += `
+                    <div class="slider-wrap">
+                      <input type="range" min="${q.min}" max="${q.max}" step="${q.step}" value="${val}" oninput="updateSlider('${q.id}', this.value)">
+                      <div class="slider-labels"><span>${q.labels[0]}</span><span>${q.labels[1]}</span></div>
+                      <div class="slider-value" id="sliderval-${q.id}">${q.valueFn(val)}</div>
+                    </div>`;
+                } else if(q.type === 'text'){
+                  const val = answers[q.id] || '';
+                  inner += `<textarea rows="4" placeholder="${q.placeholder}" oninput="answers['${q.id}']=this.value; toggleNext()">${val}</textarea>`;
+                }
+
+                inner += `<div class="skip" onclick="skipQuestion('${q.id}')">skip this one</div>
+                  <div class="nav-row">
+                    <button class="btn btn-ghost" onclick="goBack()">← back</button>
+                    <button class="btn btn-primary" id="nextBtn" onclick="advance()" ${needsSelection(q) ? 'disabled':''}>next →</button>
+                  </div>`;
+
+                screen.innerHTML = `<div class="card ${tiltClass}">${inner}</div>`;
+                updateFlower(item.chapterIndex, false);
+            }
+
+            mount.appendChild(screen);
+            window.scrollTo({top:0, behavior:'smooth'});
+        }
+
+        function needsSelection(q){
+            if(q.type === 'single') return answers[q.id] === undefined;
+            if(q.type === 'multi') return !(answers[q.id] && answers[q.id].length);
+            return false;
+        }
+
+        function selectSingle(e, qid, idx, emoji){
+            const q = findQuestion(qid);
+            answers[qid] = q.options[idx].label;
+            lastReaction = pickReaction();
+            spawnFloatingEmoji(emoji, e.clientX, e.clientY);
+            renderFlow();
+        }
+        
+        function selectMulti(e, qid, label, emoji){
+            if(!answers[qid]) answers[qid] = [];
+            const i = answers[qid].indexOf(label);
+            if(i>-1) {
+                answers[qid].splice(i,1);
+            } else {
+                answers[qid].push(label);
+                spawnFloatingEmoji(emoji, e.clientX, e.clientY);
+            }
+            lastReaction = pickReaction();
+            renderFlow();
+        }
+        
+        function updateSlider(qid, val){
+            answers[qid] = Number(val);
+            const q = findQuestion(qid);
+            document.getElementById('sliderval-'+qid).textContent = q.valueFn(Number(val));
+        }
+        
+        function toggleNext(){ }
+
+        function findQuestion(qid){
+            for(const ch of chapters) for(const q of ch.questions) if(q.id===qid) return q;
+        }
+
+        function skipQuestion(qid){
+            answers[qid] = answers[qid] || null;
+            lastReaction = null;
+            advance();
+        }
+
+        function advance(){
+            lastReaction = null;
+            if(flowIndex < flow.length-1){
+                flowIndex++;
+                renderFlow();
+            } else {
+                showScreenOnly('screen-reveal');
+                buildReveal();
+            }
+        }
+        
+        function goBack(){
+            lastReaction = null;
+            if(flowIndex>0){ flowIndex--; renderFlow(); }
+            else { showScreenOnly('screen-intro'); document.getElementById('flowerWrap').classList.remove('show'); }
+        }
+
+        function updateFlower(chapterIndex, justEntered){
+            const wrap = document.getElementById('flowerWrap');
+            wrap.classList.add('show');
+            document.querySelectorAll('.petal').forEach((p,i)=>{
+                p.classList.remove('bloomed','active');
+                if(i<chapterIndex) p.classList.add('bloomed');
+                else if(i===chapterIndex) p.classList.add('active');
+            });
+        }
+
+        function showScreenOnly(id){
+            document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            document.getElementById('flowerWrap').classList.remove('show');
+            window.scrollTo({top:0, behavior:'smooth'});
+        }
+
+        function goTo(target){
+            if(target === 'ch1-1'){
+                flowIndex = 0;
+                document.getElementById('screen-intro').classList.remove('active');
+                renderFlow();
+            } else if(target === 'cheatsheet'){
+                showScreenOnly('screen-cheatsheet');
+                buildCheatSheet();
+            } else if(target === 'bonus'){
+                showScreenOnly('screen-bonus');
+            } else if(target === 'final'){
+                showScreenOnly('screen-final');
+            }
+        }
+
+        /* ---------------- PERSONALITY REVEAL ---------------- */
+        const personalities = [
+            {match:'A dragon guarding her cave', emoji:'🐉', title:'The Cozy Dragon', desc:"Soft on the inside, will absolutely roast you if you say the wrong thing. Handle with snacks and zero sudden questions."},
+            {match:'A quiet rainy day', emoji:'🌧️', title:'The Rainy Day Soul', desc:"Needs stillness, soft blankets, and someone who doesn't need her to explain the mood."},
+            {match:'Chaotic and a little unhinged', emoji:'🌪️', title:'The Beautiful Chaos', desc:"Unpredictable, hilarious, occasionally feral. Keep memes ready at all times."},
+            {match:'A very sleepy raccoon', emoji:'🦝', title:'The Sleepy Raccoon', desc:"Wants snacks, a nap, and to be left alone until further notice. Respect the nap."}
+        ];
+
+        function buildReveal(){
+            const p = personalities.find(x=>x.match===answers.personality_intro) || personalities[0];
+            document.getElementById('revealEmoji').textContent = p.emoji;
+            document.getElementById('revealTitle').textContent = p.title;
+            document.getElementById('revealDesc').textContent = p.desc;
+            fireConfetti();
+        }
+
+        function fireConfetti(){
+            const card = document.getElementById('revealCard');
+            card.classList.remove('shake');
+            void card.offsetWidth;
+            card.classList.add('shake');
+            const bits = ['🎉','✨','💖','🌸','🎊','💫'];
+            for(let i=0;i<18;i++){
+                const el = document.createElement('div');
+                el.className = 'confetti-piece';
+                el.textContent = bits[Math.floor(Math.random()*bits.length)];
+                el.style.left = Math.random()*90 + '%';
+                el.style.animationDelay = (Math.random()*0.4) + 's';
+                card.appendChild(el);
+                setTimeout(()=> el.remove(), 2200);
+            }
+        }
+
+        function pdfPainText(){
+            const q = findQuestion('pain_level');
+            const val = answers.pain_level !== undefined && answers.pain_level !== null ? answers.pain_level : q.default;
+            return q.valueFn(Number(val));
+        }
+
+        function buildCheatSheet(){
+            const wants = (answers.want_most||[]).join(', ') || 'ask her in the moment';
+            let html = `<h4>✅ Do</h4><ul>`;
+            html += `<li>${answers.first_move || 'Ask how she\'s feeling first'}</li>`;
+            html += `<li>Check-in style: ${answers.check_in || 'Ask her, she\'ll signal'}</li>`;
+            html += `<li>She usually wants: ${wants}</li>`;
+            html += `</ul><h4>🚫 Don't</h4><ul>`;
+            html += `<li>${answers.never_say || 'Say "it\'s not that bad"'}</li>`;
+            html += `</ul><h4>🩹 Pain check</h4><ul><li>${pdfPainText()}</li></ul>`;
+            document.getElementById('flipBackContent').innerHTML = html;
+        }
+
+        /* ---------------- PDF GENERATION ---------------- */
+        function generatePDF(){
+            const status = document.getElementById('pdfStatus');
+            status.textContent = 'Generating your care guide...';
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({
+                unit: 'pt',
+                format: 'a4',
+                encryption: {
+                    userPassword: '432009',
+                    ownerPassword: '432009',
+                    userPermissions: ['print', 'modify', 'copy', 'annot-forms']
+                }
+            });
+            
+            const pageW = doc.internal.pageSize.getWidth();
+            const pageH = doc.internal.pageSize.getHeight();
+            const margin = 50;
+            let y = 0;
+
+            // HELPER: jsPDF standard fonts turn emojis into unreadable gibberish.
+            const cleanText = (str) => {
+                return String(str).replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{2B50}\u{231A}\u{23F3}\u{23F0}\u{231B}\u{23E9}-\u{23EC}]/gu, '').trim();
+            };
+
+            // --- Cover Page ---
+            doc.setFillColor('#FF6B8B');
+            doc.rect(0, 0, pageW, pageH, 'F');
+            doc.setFillColor('#B79FE8');
+            doc.circle(pageW - 60, 80, 90, 'F');
+            doc.setFillColor('#FFD15C');
+            doc.circle(60, 700, 70, 'F');
+            
+            doc.setTextColor('#FFFFFF');
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(36);
+            doc.text("Amitia's", pageW / 2, 360, { align: 'center' });
+            doc.text("Care Guide", pageW / 2, 405, { align: 'center' });
+            
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(14);
+            doc.text("compiled with care, not chocolate", pageW / 2, 445, { align: 'center' });
+            doc.setFontSize(11);
+            doc.text("for Chaki • Bachhu • Kuchpuchu", pageW / 2, 470, { align: 'center' });
+
+            // --- Format Helpers ---
+            function addPage() { 
+                doc.addPage(); 
+                doc.setFillColor('#FFF8EF'); 
+                doc.rect(0, 0, pageW, pageH, 'F'); 
+                y = 60; 
+            }
+            
+            function sectionHeader(title){
+                if (y > pageH - 120) { addPage(); }
+                
+                doc.setTextColor('#3B2646');
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(18);
+                doc.text(cleanText(title), margin, y);
+                y += 14;
+                
+                doc.setDrawColor('#FF6B8B');
+                doc.setLineWidth(1.5);
+                doc.line(margin, y, pageW - margin, y);
+                y += 30;
+            }
+            
+            function line(label, value){
+                if (!value) value = 'skipped';
+                if (Array.isArray(value)) value = value.length ? value.join(', ') : 'skipped';
+                
+                let safeValue = cleanText(value);
+                if (!safeValue) safeValue = String(value); 
+                
+                const splitValue = doc.splitTextToSize(safeValue, pageW - (margin * 2));
+                const blockHeight = 20 + (splitValue.length * 16) + 20;
+                
+                if (y + blockHeight > pageH - margin) { addPage(); }
+                
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(11.5);
+                doc.setTextColor('#E14F70');
+                doc.text(cleanText(label), margin, y);
+                y += 18;
+                
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(12);
+                doc.setTextColor('#3B2646');
+                doc.text(splitValue, margin, y);
+                
+                y += (splitValue.length * 16) + 20; 
+            }
+
+            // --- Generate Content ---
+            addPage();
+
+            const p = personalities.find(x => x.match === answers.personality_intro) || personalities[0];
+
+            sectionHeader('The Vibe Check');
+            line('Period personality', `${p.title} — ${p.desc}`);
+            line('Cramp villain', answers.villain);
+
+            sectionHeader('Survival Kit 101');
+            line('Go-to period kit', answers.period_kit);
+            line('What helps her cramps', answers.cramp_relief);
+            line('Pain scale reading', pdfPainText());
+
+            sectionHeader('What She Actually Needs From Me');
+            line('What she wants most', answers.want_most);
+            line('What "I\'m fine" actually means', answers.translator);
+            line('Check-in style', answers.check_in);
+            line('First move when I find out', answers.first_move);
+            line('Never do / say', answers.never_say);
+
+            // --- Bonus Coupon Page ---
+            addPage();
+            sectionHeader('Redeemable Coupons');
+            const coupons = [
+                ['Rage Nap Alibi', '1x "she\'s asleep, do not disturb" cover story, no questions asked'],
+                ['No-Questions Snack Run', '1x emergency snack delivery, silent and unbothered'],
+                ['I Was Wrong And I Know It', '1x instant apology, zero debate, full surrender'],
+                ['Emergency Cuddle Puddle', '1x on-demand hug, redeemable mid-argument if needed'],
+                ['Veto My Terrible Movie Pick', '1x full override of my questionable taste in movies']
+            ];
+            coupons.forEach(([t, d]) => line(t, d));
+
+            y += 20;
+            doc.setFont('helvetica', 'italic');
+            doc.setFontSize(11);
+            doc.setTextColor('#6B5178');
+            doc.text("Made with love (and slightly unhinged devotion), one honest answer at a time.", margin, y);
+
+            doc.save('Amitias_Care_Guide.pdf');
+            status.innerHTML = 'Downloaded! 🎉 <br>Remember: the password is <b>432009</b>.';
+        }
+    </script>
+</body>
+
+</html>
